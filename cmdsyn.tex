@@ -1,0 +1,215 @@
+%%%%%%%%%%%BEGINPACKAGE%%%%%%%%%
+\usepackage{xparse}
+\usepackage{xkeyval}
+\usepackage{forloop}
+\makeatletter
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                                 Ifs                                                  %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newif\ifcmdsyn@param@required
+\newif\ifcmdsyn@param@namerequired
+\newif\ifparameterrequired
+\newif\ifparameternamerequired
+\newif\ifparametershortpresent
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                                 Counters                                         %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newcounter{cmdsyn@env}
+\newcounter{cmdsyn@env@cmd}
+\newcounter{cmdsyn@cmd}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                                 Keys                                               %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\define@boolkey[cmdsyn]{command}{required}{}
+\define@boolkey[cmdsyn]{command}{nameRequired}[true]{}
+\define@key[cmdsyn]{command}{name}[\undefined]{\def\cmdsyn@parname{#1}}
+\define@key[cmdsyn]{command}{alias}[\undefined]{\def\cmdsyn@paralias{#1}}
+\define@key[cmdsyn]{command}{short}[\undefined]{\def\cmdsyn@parshort{#1}}
+\define@key[cmdsyn]{command}{default}[\undefined]{\def\cmdsyn@pardefault{#1}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                                 Formatters                                      %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newcommand\cmdysn@OptionalParameterFormat[1]{[#1]}%
+\let\OptionalParameterFormat\cmdysn@OptionalParameterFormat%
+
+\newcommand\cmdysn@OptionalParameterNameFormat[1]{[#1]}%
+\let\OptionalParameterNameFormat\cmdysn@OptionalParameterNameFormat%
+
+\newcommand\cmdysn@RequiredParameterFormat[1]{#1}%
+\let\RequiredParameterFormat\cmdysn@RequiredParameterFormat%
+
+\newcommand\cmdysn@RequiredParameterNameFormat[1]{#1}%
+\let\RequiredParameterNameFormat\cmdysn@RequiredParameterNameFormat%
+
+\newcommand\cmdysn@ShortParameterFormat[1]{%
+\ifparametershortpresent%
+\hspace{1ex}$\left<\right.$\textit{#1}$\left.\right>$%
+\fi%
+}%
+\let\ShortParameterFormat\cmdysn@ShortParameterFormat%
+
+\newcommand\cmdysn@commandFormat[1]{#1}
+\let\commandFormat\cmdysn@commandFormat
+
+\newcommand\cmdsyn@parameterFormat{%
+\ifparameterrequired%
+\RequiredParameterFormat{\formatparametername \ShortParameterFormat{\theparametershort}}%
+\else%
+\OptionalParameterFormat{\formatparametername \ShortParameterFormat{\theparametershort}}%
+\fi%
+}%
+
+\let\formatparameter\cmdsyn@parameterFormat%
+
+\newcommand\cmdsyn@parameterNameFormat{%
+\ifparameternamerequired%
+\RequiredParameterNameFormat{-\theparametername}%
+\else%
+\OptionalParameterNameFormat{-\theparametername}%
+\fi%
+}%
+
+\let\formatparametername\cmdsyn@parameterNameFormat%
+
+\newcommand\cmdyn@formatyntax[1]{\texttt{#1}}%
+
+\let\formatsyntax\cmdyn@formatyntax%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                                 Strings                                            %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newcommand\cmdysn@formatrequiredstring{\textit{(required)}}%
+\let\requiredparameterstring\cmdysn@formatrequiredstring%
+
+\newcommand\cmdysn@formataliasstring[1]{Alias: #1}%
+\let\parameteraliasstring\cmdysn@formataliasstring%
+
+\newcommand\cmdysn@formatdefaultstring[1]{Default: #1}%
+\let\parameterdefaultstring\cmdysn@formatdefaultstring%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                                 Aux                                                %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newcommand{\cmdsyn@write}[2]{%
+	\immediate\write\@auxout{\string\expandafter\gdef\string\csname\space#2\string\endcsname{#1}}%
+}%
+
+\def\cmdsyn@writeAux#1#2{%
+	\expandafter\cmdsyn@write{#2}{#1}%
+}%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                                 Commands                                      %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\NewDocumentCommand{\command}{m o}
+{
+	%Finish the output of the last item
+	\cmdsyn@printpreviouscommand%
+	%
+	%Reset the prevoius stored values
+	%
+	\let\cmdsyn@parshort\undefined%
+	\let\cmdsyn@parname\undefined%
+	\let\cmdsyn@paralias\undefined%
+	\let\cmdsyn@pardefault\undefined%
+	\cmdsyn@command@nameRequiredtrue%
+	%
+	%Read the keys from the optional Arguments
+	%
+	% TODO
+	% C	heck ifoptional argument is submitted
+	\setkeys[cmdsyn]{command}{#2}%
+	%
+	\stepcounter{cmdsyn@env@cmd}%
+	%
+	% Begin the next item
+	%
+	\item[#1]%
+	\ifcmdsyn@command@required%
+	\requiredparameterstring
+	\fi%
+	%
+	% Store information for next run
+	%
+	\cmdsyn@writeAux{cmdsyn@commands@\thecmdsyn@env @\thecmdsyn@env@cmd @name}{#1}%
+	%
+	\ifcmdsyn@command@nameRequired%
+		\cmdsyn@writeAux{cmdsyn@commands@\thecmdsyn@env @\thecmdsyn@env@cmd @nameRequired}{\relax}%
+	\fi%
+	%
+	\ifcmdsyn@command@required%
+		\cmdsyn@writeAux{cmdsyn@commands@\thecmdsyn@env @\thecmdsyn@env@cmd @required}{\relax}%
+	\fi%
+	%
+	\ifcsname cmdsyn@parshort\endcsname%
+		\cmdsyn@writeAux{cmdsyn@commands@\thecmdsyn@env @\thecmdsyn@env@cmd @short}{\cmdsyn@parshort}%
+	\fi%
+}%
+
+\newenvironment{cmd}[1]
+%BEGIN
+{
+	\stepcounter{cmdsyn@env}%
+	\ifcsname cmdsyn@commands@\thecmdsyn@env @params\endcsname%
+		\formatsyntax{\writeSyntax{#1}}%
+	\else%
+		\typeout{^^J^^J !! Please run LaTeX again to get correct output^^J}%
+	\fi%
+	\begin{description}%
+}
+%END
+{
+	\cmdsyn@printpreviouscommand%
+	\end{description}%
+	\stepcounter{cmdsyn@env@cmd}%
+	\cmdsyn@writeAux{cmdsyn@commands@\thecmdsyn@env  @params}{\thecmdsyn@env@cmd}%
+	\setcounter{cmdsyn@env@cmd}{0}%
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                                 Commands  (Internal Helpers)           %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newcommand\writeSyntax[1]{
+	#1%
+	\setcounter{cmdsyn@cmd}{0}%
+%	
+	\forloop{cmdsyn@cmd}{1}{\thecmdsyn@cmd<\csname cmdsyn@commands@\thecmdsyn@env @params\endcsname}{%
+		\edef\theparametername{\csname cmdsyn@commands@\thecmdsyn@env @\thecmdsyn@cmd @name\endcsname}%
+		\ifcsname cmdsyn@commands@\thecmdsyn@env @\thecmdsyn@cmd @short\endcsname%
+			\parametershortpresenttrue \else \parametershortpresentfalse \fi%
+		\edef\theparametershort{\csname cmdsyn@commands@\thecmdsyn@env @\thecmdsyn@cmd @short\endcsname}%
+		\ifcsname cmdsyn@commands@\thecmdsyn@env @\thecmdsyn@cmd @required\endcsname\parameterrequiredtrue\else\parameterrequiredfalse\fi%
+		\ifcsname cmdsyn@commands@\thecmdsyn@env @\thecmdsyn@cmd @nameRequired\endcsname\parameternamerequiredtrue\else\parameternamerequiredfalse\fi%
+		%\def\ifparameternamerequired\ifcmdsyn@param@namerequired
+		\hspace{1ex}\formatparameter%
+		\def\theparametername\undefined%
+		\def\theparametershort\undefined%
+		\def\ifparameterrequired\undefined%
+		\def\ifparameternamerequired\undefined%
+		\stepcounter{cmdsyn@cmd}%
+	}
+}
+
+
+\newcommand\cmdsyn@printpreviouscommand{
+\ifcsname cmdsyn@paralias\endcsname%
+	\parameteraliasstring{\cmdsyn@paralias}%
+\fi%
+\ifcsname cmdsyn@pardefault\endcsname%
+	\parameterdefaultstring{\cmdsyn@pardefault}%
+\fi%
+}
+
+%%%%%%%%%%%%END PACKAGE%%%%%%%%%%%%%%%%%%%
