@@ -1,27 +1,116 @@
-%%%%%%%%%%%BEGINPACKAGE%%%%%%%%%
+% \iffalse meta-comment
+%
+% Copyright 2019 by Philemon Eichin
+%
+% This work may be distributed and/or modified under the
+% conditions of the LaTeX Project Public License, either version 1.3
+% of this license or (at your option) any later version.
+% The latest version of this license is in
+%   http://www.latex-project.org/lppl.txt
+% and version 1.3 or later is part of all distributions of LaTeX
+% version 2005/12/01 or later.
+%
+% This work has the LPPL maintenance status `maintained'.
+% 
+% The Current Maintainer of this work is Philemon Eichin.
+%
+% This work consists of the files cmdsyn.dtx and cmdsyn.ins
+% and the derived file cmdsyn.sty.
+%
+% \fi
+%
+% \iffalse
+%<package>\NeedsTeXFormat{LaTeX2e}[2005/12/01]
+%<package>\ProvidesPackage{cmdsyn}
+%<package>    [2019/08/07 v0.1 Initial Release]
+%<*driver>
+\documentclass{ltxdoc}
+\usepackage{cmdsyn}
+\EnableCrossrefs
+\CodelineIndex
+\RecordChanges
+\begin{document}
+    \DocInput{cmdsy.ltx}
+\end{document}
+%</driver>
+% \fi
+% \CheckSum{0}
+% \CharacterTable
+% {Upper-case \A\B\C\D\E\F\G\H\I\J\K\L\M\N\O\P\Q\R\S\T\U\V\W\X\Y\Z
+% Lower-case \a\b\c\d\e\f\g\h\i\j\k\l\m\n\o\p\q\r\s\t\u\v\w\x\y\z
+% Digits \0\1\2\3\4\5\6\7\8\9
+% Exclamation \! Double quote \" Hash (number) \#
+% Dollar \$ Percent \% Ampersand \&
+% Acute accent \’ Left paren \( Right paren \)
+% Asterisk \* Plus \+ Comma \,
+% Minus \- Point \. Solidus \/
+% Colon \: Semicolon \; Less than \<
+% Equals \= Greater than \> Question mark \?
+% Commercial at \@ Left bracket \[ Backslash \\
+% Right bracket \] Circumflex \^ Underscore \_
+% Grave accent \‘ Left brace \{ Vertical bar \|
+% Right brace \} Tilde \~}
+% \changes{v0.1}{2019/08/07}{Initial development version}
+% \GetFileInfo{cmdsyn.sty}
+% \DoNotIndex{\#,\$,\%,\&,\@,\\,\{,\},\^,\_,\~,\ }
+% \DoNotIndex{\@ne}
+% \DoNotIndex{\advance,\begingroup,\catcode,\closein}
+% \DoNotIndex{\closeout,\day,\def,\edef,\else,\empty,\endgroup}
+% \title{The \textsf{cmdsyn} Package\thanks{This document corresponds to \textsf{cmdsyn}~\fileversion, dated~\filedate.}}
+% \author{Philemon Eichin \texttt{p.eichin@phirsoft.com}}
+%
+% \maketitle
+% \begin{abstract}
+%   \textsf{cmssyn} is a package to document the command line interface of an application. You can define commands with its
+%   parameters and document each parameter individually. The package suppors optional parameters as well as defaul values.
+% \tableofcontents
+% \section{Motivation}
+% A couple of years ago, i just had started using \LaTeX, when i had to write a small program for my university job. Back then
+% i thought, it would be a great idea, to write the documentation on how to use that program in \LaTeX. Since the application
+% was a console application, i needed some way to describe all parameters and typeset a nice sample command line. Since i was
+% unable to find a package for that purpose on CTAN, i decided to create a small set of commands for that task. I planned to
+% publish theese set as a package, but i didn't knew how, and i had other stuff to do. I created a GitHub repository, but
+% didn't even commit the source, before i forgot about that project.
+% \par
+% Recently when i was cleaning up my computer, i found that code file and decided to finally publish it.
+%
+% \section{Customize the formatting}
+%    You can customize the formatting of a paramter, by providing a macro, that will typeset 
+% \StopEventually
+% {
+%     \PrintChanges
+%     \PrintIndex   
+% }
+% \section{Implementation}
+% \subsection{Required Packages}
+% Load the packages required by this package.
+%    \begin{macrocode}
 \usepackage{xparse}
 \usepackage{xkeyval}
 \usepackage{forloop}
-\makeatletter
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%                                 Ifs                                                  %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\newif\ifcmdsyn@param@required
-\newif\ifcmdsyn@param@namerequired
-\newif\ifparameterrequired
-\newif\ifparameternamerequired
-\newif\ifparametershortpresent
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%                                 Counters                                         %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+%    \end{macrocode}
+% \subsection{Declare counters}
+%    Declare some counter to track the number of commands and parameters.
+%    \begin{macrocode}
 \newcounter{cmdsyn@env}
 \newcounter{cmdsyn@env@cmd}
 \newcounter{cmdsyn@cmd}
-
+%    \end{macrocode}
+% \subsection{Declare conditionals}
+% Declare some if, that are used as properties of a parameter
+%    \begin{macrocode}
+\newif\ifcmdsyn@param@required
+\newif\ifcmdsyn@param@namerequired
+\newif\ifcmdsyn@param@shorpresent
+%    \end{macrocode}
+% The ifs, will store the following information:
+% \begin{description}
+%    \item[ifcmdsyn@param@required] Is set to \emph{true}, if the parameter is a mandatory parameter.
+%        For an optional paramter the if is set to \emph{false}.
+%    \item[ifcmdsyn@param@namerequired] Is set to \emph{true}, if
+%    \item[\ifcmdsyn@param@shorpresent] Is set to \emph{true}, if there is an abbreviaton for the paramter.
+% \end{description}
+%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                                 Keys                                               %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -211,5 +300,3 @@
 	\parameterdefaultstring{\cmdsyn@pardefault}%
 \fi%
 }
-
-%%%%%%%%%%%%END PACKAGE%%%%%%%%%%%%%%%%%%%
